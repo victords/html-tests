@@ -7,6 +7,7 @@ Game.Main = {
 	loaded: 0,
 	frame: 0,
 	objs: [],
+	ramps: [],
 	imgs: [],
 	keyState: [],
 	prevKeyState: [],
@@ -55,8 +56,17 @@ Game.Main = {
 		Game.Main.objs.push(new Game.GameObject(366, 134, Game.Main.imgs[1]));
 		Game.Main.objs.push(new Game.GameObject(364, 136, Game.Main.imgs[1]));
 		Game.Main.objs.push(new Game.GameObject(362, 138, Game.Main.imgs[1]));
+		Game.Main.ramps.push(new Game.Ramp(100, 400, 200, 130, true));
+		//Game.Main.objs.push(new Game.GameObject(300, 400, Game.Main.imgs[1], 200, 10));
+		Game.Main.ramps.push(new Game.Ramp(300, 400, 200, 250, false));
+		//Game.Main.objs.push(new Game.GameObject(100, 400, Game.Main.imgs[1], 200, 10));
+		Game.Main.objs.push(new Game.GameObject(100, 530, Game.Main.imgs[1], 200, 10));
+		Game.Main.objs.push(new Game.GameObject(290, 540, Game.Main.imgs[1], 10, 120));
+		Game.Main.objs.push(new Game.GameObject(300, 650, Game.Main.imgs[1], 200, 10));
 		Game.Main.ctx = document.getElementById("screen").getContext("2d");
 		Game.Main.ctx.fillStyle = "black";
+		Game.Main.ctx.lineWidth = 1;
+		Game.Main.ctx.strokeStyle = "black";
 		
 		// Main loop
 		setInterval(function(){
@@ -80,7 +90,7 @@ Game.Main = {
 		if (Game.Main.keyDown(Game.Main.KEYS.LEFT)) xVar = -Game.Main.man.speed;
 		//if (keyReleased(KEYS.UP) || keyReleased(KEYS.RIGHT) || keyReleased(KEYS.DOWN) || keyReleased(KEYS.LEFT))
 			//console.log("Parou o movimento!");		
-		Game.Main.man.move(xVar, yVar, Game.Main.objs);
+		Game.Main.man.move(xVar, yVar, Game.Main.objs, Game.Main.ramps);
 		
 		Game.Main.man.update();
 		for (var i in Game.Main.objs)
@@ -105,6 +115,8 @@ Game.Main = {
 		for (var i in Game.Main.objs)
 			if (Game.Main.objs[i].isVisible())
 				Game.Main.objs[i].draw();
+		for (var i in Game.Main.ramps)
+			Game.Main.ramps[i].draw();
 	}
 };
 

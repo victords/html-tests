@@ -8,6 +8,33 @@ Game.Rectangle = function(x, y, w, h) {
 	this.h = h;
 }
 
+Game.Ramp = function(x, y, w, h, left) {
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+	// Indicates whether the ramp raises from left to right
+	this.left = left;
+	
+	this.intersects = function(obj) {
+		return obj.x + obj.width > this.x && obj.x < this.x + this.w && obj.y > this.getY(obj) && obj.y <= this.y + this.h - obj.height;
+	}
+	this.getY = function(obj) {
+		if (this.left && obj.x + obj.width > this.x + this.w) return this.y - obj.height;
+		else if (this.left) return this.y + (1.0 * (this.x + this.w - obj.x - obj.width) * this.h / this.w) - obj.height;
+		else if (obj.x < this.x) return this.y - obj.height;
+		else return this.y + (1.0 * (obj.x - this.x) * this.h / this.w) - obj.height;
+	}
+	this.draw = function() {
+		Game.Main.ctx.beginPath();
+		Game.Main.ctx.moveTo((this.left ? this.x + this.w : this.x) - Game.Main.camX, this.y - Game.Main.camY);
+		Game.Main.ctx.lineTo((this.left ? this.x : this.x + this.w) - Game.Main.camX, this.y + this.h - Game.Main.camY);
+		Game.Main.ctx.lineTo((this.left ? this.x + this.w : this.x) - Game.Main.camX, this.y + this.h - Game.Main.camY);
+		Game.Main.ctx.lineTo((this.left ? this.x + this.w : this.x) - Game.Main.camX, this.y - Game.Main.camY);
+		Game.Main.ctx.stroke();
+	}
+}
+
 Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
 	this.x = x;
 	this.y = y;
@@ -21,16 +48,16 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
 	this.bounds = new Game.Rectangle(this.x, this.y, this.width, this.height);
 	this.speed = 7;
 	
-	this.move = function(xVar, yVar, obst) {
+	this.move = function(xVar, yVar, obstacles, ramps) {
 		var x = xVar < 0 ? this.x + xVar : this.x,
 			y = yVar < 0 ? this.y + yVar : this.y,
 			w = this.width + (xVar < 0 ? -xVar : xVar),
 			h = this.height + (yVar < 0 ? -yVar : yVar);
 		var moveBounds = new Game.Rectangle(x, y, w, h), collList = [];
 		
-		for (var i in obst)
-			if (Game.Support.intersects(moveBounds, obst[i].bounds))
-				collList.push(obst[i]);
+		for (var i in obstacles)
+			if (Game.Support.intersects(moveBounds, obstacles[i].bounds))
+				collList.push(obstacles[i]);
 		
 		if (collList.length > 0) {
 			var up = yVar < 0, rt = xVar > 0, dn = yVar > 0, lf = xVar < 0, xLim, yLim;
@@ -85,6 +112,10 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
 		}
 		this.x += xVar;
 		this.y += yVar;
+		
+		for (var i in ramps)
+			if (ramps[i].intersects(this))
+				this.y = ramps[i].getY(this);
 	}
 	
 	this.update = function() {
