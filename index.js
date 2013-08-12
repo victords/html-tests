@@ -2,7 +2,7 @@ Game.Main = {
 	KEYS: { UP: 38, RIGHT: 39, DOWN: 40, LEFT: 37, ENTER: 13 },
 	SCREEN_WIDTH: 800,
 	SCREEN_HEIGHT: 600,
-	TOTAL_IMAGES: 2,
+	TOTAL_IMAGES: 6,
 	FRAME_DURATION: 16.6667,
 	loaded: 0,
 	frame: 0,
@@ -35,34 +35,28 @@ Game.Main = {
 	},
 	initialize: function() {
 		// Initialization
-		Game.Main.man = new Game.GameObject(100, 100, Game.Main.imgs[0]);
-		Game.Main.objs.push(new Game.GameObject(400, 100, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(398, 102, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(396, 104, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(394, 106, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(392, 108, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(390, 110, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(388, 112, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(386, 114, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(384, 116, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(382, 118, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(380, 120, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(378, 122, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(376, 124, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(374, 126, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(372, 128, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(370, 130, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(368, 132, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(366, 134, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(364, 136, Game.Main.imgs[1]));
-		Game.Main.objs.push(new Game.GameObject(362, 138, Game.Main.imgs[1]));
-		Game.Main.ramps.push(new Game.Ramp(100, 400, 200, 130, true));
-		//Game.Main.objs.push(new Game.GameObject(300, 400, Game.Main.imgs[1], 200, 10));
-		Game.Main.ramps.push(new Game.Ramp(300, 400, 200, 250, false));
-		//Game.Main.objs.push(new Game.GameObject(100, 400, Game.Main.imgs[1], 200, 10));
-		Game.Main.objs.push(new Game.GameObject(100, 530, Game.Main.imgs[1], 200, 10));
-		Game.Main.objs.push(new Game.GameObject(290, 540, Game.Main.imgs[1], 10, 120));
-		Game.Main.objs.push(new Game.GameObject(300, 650, Game.Main.imgs[1], 200, 10));
+		Game.Main.man = new Game.GameObject(100, 100, Game.Main.imgs[0], 16, 100, -42, 0, [0, 1, 2, 1, 0, 3, 4, 3]);
+		Game.Main.ramps.push(new Game.Ramp(100, 500, 20, 15, true));
+		Game.Main.ramps.push(new Game.Ramp(120, 488, 20, 12, true));
+		Game.Main.ramps.push(new Game.Ramp(140, 478, 20, 10, true));
+		Game.Main.ramps.push(new Game.Ramp(160, 470, 20, 8, true));
+		Game.Main.ramps.push(new Game.Ramp(180, 464, 20, 6, true));
+		Game.Main.ramps.push(new Game.Ramp(200, 461, 20, 3, true));
+		Game.Main.ramps.push(new Game.Ramp(220, 460, 20, 1, true));
+		Game.Main.ramps.push(new Game.Ramp(240, 460, 20, 1, false));
+		Game.Main.ramps.push(new Game.Ramp(260, 461, 20, 3, false));
+		Game.Main.ramps.push(new Game.Ramp(280, 464, 20, 6, false));
+		Game.Main.ramps.push(new Game.Ramp(300, 470, 20, 8, false));
+		Game.Main.ramps.push(new Game.Ramp(320, 478, 20, 10, false));
+		Game.Main.ramps.push(new Game.Ramp(340, 488, 20, 12, false));
+		Game.Main.ramps.push(new Game.Ramp(360, 500, 20, 15, false));
+		Game.Main.objs.push(new Game.GameObject(0, 515, null, 480, 10));
+		Game.Main.objs.push(new Game.GameObject(120, 500, null, 240, 15));
+		Game.Main.objs.push(new Game.GameObject(140, 488, null, 200, 12));
+		Game.Main.objs.push(new Game.GameObject(160, 478, null, 160, 10));
+		Game.Main.objs.push(new Game.GameObject(180, 470, null, 120, 8));
+		Game.Main.objs.push(new Game.GameObject(200, 464, null, 80, 6));
+		Game.Main.objs.push(new Game.GameObject(220, 461, null, 40, 3));
 		Game.Main.ctx = document.getElementById("screen").getContext("2d");
 		Game.Main.ctx.fillStyle = "black";
 		Game.Main.ctx.lineWidth = 1;
@@ -136,4 +130,8 @@ document.onkeyup = function(e) {
 };
 
 Game.Main.loadImage("face.png");
+Game.Main.loadImage("face-l1.png");
+Game.Main.loadImage("face-l2.png");
+Game.Main.loadImage("face-r1.png");
+Game.Main.loadImage("face-r2.png");
 Game.Main.loadImage("sphere.png");

@@ -35,7 +35,7 @@ Game.Ramp = function(x, y, w, h, left) {
 	}
 }
 
-Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
+Game.GameObject = function(x, y, image, width, height, imgX, imgY, animation) {
 	this.x = x;
 	this.y = y;
 	this.image = image;
@@ -47,6 +47,9 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
 	this.imgY = imgY || 0;
 	this.bounds = new Game.Rectangle(this.x, this.y, this.width, this.height);
 	this.speed = 7;
+	this.animation = animation;
+	this.animIndex = 0;
+	this.animCounter = 0;
 	
 	this.move = function(xVar, yVar, obstacles, ramps) {
 		var x = xVar < 0 ? this.x + xVar : this.x,
@@ -119,18 +122,27 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY) {
 	}
 	
 	this.update = function() {
+		this.animCounter++;
+		if (this.animCounter == 7) {
+			if (this.animation) {
+				if (this.animIndex == this.animation.length - 1) this.animIndex = 0;
+				else this.animIndex++;
+				this.image = Game.Main.imgs[this.animation[this.animIndex]];
+			}
+			this.animCounter = 0;
+		}
 	}
 	
 	this.isVisible = function() {
 		var imgX = this.x + this.imgX - Game.Main.camX, imgY = this.y + this.imgY - Game.Main.camY;
-		return imgX < Game.Main.SCREEN_WIDTH && imgX + this.image.width > 0 &&
-			imgY < Game.Main.SCREEN_HEIGHT && imgY + this.image.height > 0;
+		return imgX < Game.Main.SCREEN_WIDTH && imgX + (this.image ? this.image.width : this.width) > 0 &&
+			imgY < Game.Main.SCREEN_HEIGHT && imgY + (this.image ? this.image.height : this.height) > 0;
 	}
 	
 	this.draw = function() {
-		//Game.Main.ctx.globalAlpha = this.alpha;
-		Game.Main.ctx.fillRect(this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY, this.width, this.height);
-		//Game.Main.ctx.drawImage(this.image, this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY);
+		Game.Main.ctx.globalAlpha = this.alpha;
+		if (this.image) Game.Main.ctx.drawImage(this.image, this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY);
+		else Game.Main.ctx.fillRect(this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY, this.width, this.height);
 	}
 };
 
