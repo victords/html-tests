@@ -4,6 +4,7 @@ Game.Main = {
 	SCREEN_HEIGHT: 600,
 	TOTAL_IMAGES: 6,
 	FRAME_DURATION: 16.6667,
+	GRAVITY: { x: 0, y: 1 },
 	loaded: 0,
 	frame: 0,
 	objs: [],
@@ -35,7 +36,8 @@ Game.Main = {
 	},
 	initialize: function() {
 		// Initialization
-		Game.Main.man = new Game.GameObject(100, 100, Game.Main.imgs[0], 16, 100, -42, 0, [0, 1, 2, 1, 0, 3, 4, 3]);
+		//Game.Main.man = new Game.GameObject(100, 100, Game.Main.imgs[0], 16, 100, -42, 0, [0, 1, 2, 1, 0, 3, 4, 3]);
+		Game.Main.man = new Game.GameObject(100, 100, null, 100, 100);
 		Game.Main.ramps.push(new Game.Ramp(100, 500, 20, 15, true));
 		Game.Main.ramps.push(new Game.Ramp(120, 488, 20, 12, true));
 		Game.Main.ramps.push(new Game.Ramp(140, 478, 20, 10, true));
@@ -57,6 +59,10 @@ Game.Main = {
 		Game.Main.objs.push(new Game.GameObject(180, 470, null, 120, 8));
 		Game.Main.objs.push(new Game.GameObject(200, 464, null, 80, 6));
 		Game.Main.objs.push(new Game.GameObject(220, 461, null, 40, 3));
+		Game.Main.objs.push(new Game.GameObject(600, 0, null, 100, 50));
+		Game.Main.objs.push(new Game.GameObject(700, 0, null, 50, 100));
+		Game.Main.objs.push(new Game.GameObject(600, 50, null, 50, 100));
+		Game.Main.objs.push(new Game.GameObject(650, 100, null, 100, 50));
 		Game.Main.ctx = document.getElementById("screen").getContext("2d");
 		Game.Main.ctx.fillStyle = "black";
 		Game.Main.ctx.lineWidth = 1;
@@ -77,14 +83,15 @@ Game.Main = {
 	update: function() {
 		//if (keyPressed(KEYS.UP) || keyPressed(KEYS.RIGHT) || keyPressed(KEYS.DOWN) || keyPressed(KEYS.LEFT))
 			//console.log("Iniciou o movimento!");
-		var xVar = 0, yVar = 0;
-		if (Game.Main.keyDown(Game.Main.KEYS.UP)) yVar = -Game.Main.man.speed;
-		if (Game.Main.keyDown(Game.Main.KEYS.RIGHT)) xVar = Game.Main.man.speed;
-		if (Game.Main.keyDown(Game.Main.KEYS.DOWN)) yVar = Game.Main.man.speed;
-		if (Game.Main.keyDown(Game.Main.KEYS.LEFT)) xVar = -Game.Main.man.speed;
+		var forces = { x: 0, y: 0 };
+		if (Game.Main.keyDown(Game.Main.KEYS.UP) && Game.Main.man.bottom) forces.y = -30;
+		if (Game.Main.keyDown(Game.Main.KEYS.RIGHT)) forces.x = 0.1;
+		//if (Game.Main.keyDown(Game.Main.KEYS.DOWN)) forces.y = 0.1;
+		if (Game.Main.keyDown(Game.Main.KEYS.LEFT)) forces.x = -0.1;
+		
 		//if (keyReleased(KEYS.UP) || keyReleased(KEYS.RIGHT) || keyReleased(KEYS.DOWN) || keyReleased(KEYS.LEFT))
 			//console.log("Parou o movimento!");		
-		Game.Main.man.move(xVar, yVar, Game.Main.objs, Game.Main.ramps);
+		Game.Main.man.move(forces, Game.Main.objs, Game.Main.ramps);
 		
 		Game.Main.man.update();
 		for (var i in Game.Main.objs)

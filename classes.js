@@ -46,39 +46,57 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY, animation) {
 	this.imgX = imgX || 0;
 	this.imgY = imgY || 0;
 	this.bounds = new Game.Rectangle(this.x, this.y, this.width, this.height);
-	this.speed = 7;
+	this.speed = { x: 0, y: 0 };
+	this.storedForces = { x: 0, y: 0 };
+	this.top = this.bottom = this.left = this.right = null;
 	this.animation = animation;
 	this.animIndex = 0;
 	this.animCounter = 0;
 	
-	this.move = function(xVar, yVar, obstacles, ramps) {
-		var x = xVar < 0 ? this.x + xVar : this.x,
-			y = yVar < 0 ? this.y + yVar : this.y,
-			w = this.width + (xVar < 0 ? -xVar : xVar),
-			h = this.height + (yVar < 0 ? -yVar : yVar);
-		var moveBounds = new Game.Rectangle(x, y, w, h), collList = [];
+	this.move = function(forces, obstacles, ramps) {
+		this.top = this.bottom = this.left = this.right = null;
+		forces.x += Game.Main.GRAVITY.x; forces.y += Game.Main.GRAVITY.y;
+		forces.x += this.storedForces.x; forces.y += this.storedForces.y;
+		this.storedForces.x = this.storedForces.y = 0;
+		this.speed.x += forces.x; this.speed.y += forces.y;
+		for (var i in obstacles) {
+			if (this.x + this.width == obstacles[i].x && this.y + this.height > obstacles[i].y &&
+				this.y < obstacles[i].y + obstacles[i].height && this.speed.x > 0) { this.speed.x = 0; this.right = obstacles[i]; }
+			if (this.x == obstacles[i].x + obstacles[i].width && this.y + this.height > obstacles[i].y &&
+				this.y < obstacles[i].y + obstacles[i].height && this.speed.x < 0) { this.speed.x = 0; this.left = obstacles[i]; }
+			if (this.y + this.height == obstacles[i].y && this.x + this.width > obstacles[i].x &&
+				this.x < obstacles[i].x + obstacles[i].width && this.speed.y > 0) { this.speed.y = 0; this.bottom = obstacles[i]; }
+			if (this.y == obstacles[i].y + obstacles[i].height && this.x + this.width > obstacles[i].x &&
+				this.x < obstacles[i].x + obstacles[i].width && this.speed.y < 0) { this.speed.y = 0; this.top = obstacles[i]; }
+		}
 		
-		for (var i in obstacles)
+		var x = this.speed.x < 0 ? this.x + this.speed.x : this.x,
+			y = this.speed.y < 0 ? this.y + this.speed.y : this.y,
+			w = this.width + (this.speed.x < 0 ? -this.speed.x : this.speed.x),
+			h = this.height + (this.speed.y < 0 ? -this.speed.y : this.speed.y);
+		var moveBounds = new Game.Rectangle(x, y, w, h), collList = [];
+		for (var i in obstacles) {
 			if (Game.Support.intersects(moveBounds, obstacles[i].bounds))
 				collList.push(obstacles[i]);
+		}
 		
 		if (collList.length > 0) {
-			var up = yVar < 0, rt = xVar > 0, dn = yVar > 0, lf = xVar < 0, xLim, yLim;
-			if (xVar == 0 || yVar == 0) {
+			var up = this.speed.y < 0, rt = this.speed.x > 0, dn = this.speed.y > 0, lf = this.speed.x < 0, xLim, yLim;
+			if (this.speed.x == 0 || this.speed.y == 0) {
 				// Movimento ortogonal
 				if (rt) xLim = Game.Support.minProp(collList, "x");
 				else if (lf) xLim = Game.Support.maxProp(collList, "x2");
 				else if (dn) yLim = Game.Support.minProp(collList, "y");
 				else if (up) yLim = Game.Support.maxProp(collList, "y2");
-				if (rt && this.x + this.width + xVar > xLim) { this.x = xLim - this.width; xVar = 0; }
-				else if (lf && this.x + xVar < xLim) { this.x = xLim; xVar = 0; }
-				else if (dn && this.y + this.height + yVar > yLim) { this.y = yLim - this.height; yVar = 0; }
-				else if (up && this.y + yVar < yLim) { this.y = yLim; yVar = 0; }
+				if (rt && this.x + this.width + this.speed.x > xLim) { this.x = xLim - this.width; this.speed.x = 0; }
+				else if (lf && this.x + this.speed.x < xLim) { this.x = xLim; this.speed.x = 0; }
+				else if (dn && this.y + this.height + this.speed.y > yLim) { this.y = yLim - this.height; this.speed.y = 0; }
+				else if (up && this.y + this.speed.y < yLim) { this.y = yLim; this.speed.y = 0; }
 			}
 			else {
 				// Movimento diagonal
-				var xLimDef = this.x + xVar + (rt ? this.width : 0),
-					yLimDef = this.y + yVar + (dn ? this.height : 0);
+				var xLimDef = this.x + this.speed.x + (rt ? this.width : 0),
+					yLimDef = this.y + this.speed.y + (dn ? this.height : 0);
 				for (var i in collList) {
 					if (rt) xLim = collList[i].x;
 					else xLim = collList[i].x2;
@@ -94,8 +112,8 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY, animation) {
 						if (rt && xLim < xLimDef || lf && xLim > xLimDef) xLimDef = xLim;
 					}
 					else {
-						var xTime = 1.0 * (xLim - this.x - (xVar < 0 ? 0 : this.width)) / xVar;
-						var yTime = 1.0 * (yLim - this.y - (yVar < 0 ? 0 : this.height)) / yVar;
+						var xTime = 1.0 * (xLim - this.x - (this.speed.x < 0 ? 0 : this.width)) / this.speed.x;
+						var yTime = 1.0 * (yLim - this.y - (this.speed.y < 0 ? 0 : this.height)) / this.speed.y;
 						if (xTime > yTime) {
 							// Limitando x
 							if (rt && xLim < xLimDef || lf && xLim > xLimDef) xLimDef = xLim;
@@ -110,15 +128,15 @@ Game.GameObject = function(x, y, image, width, height, imgX, imgY, animation) {
 				else this.x = xLimDef - this.width;
 				if (up) this.y = yLimDef;
 				else this.y = yLimDef - this.height;
-				xVar = yVar = 0;
+				this.speed.x = this.speed.y = 0;
 			}
 		}
-		this.x += xVar;
-		this.y += yVar;
+		this.x += this.speed.x;
+		this.y += this.speed.y;
 		
 		for (var i in ramps)
 			if (ramps[i].intersects(this))
-				this.y = ramps[i].getY(this);
+				{ this.y = ramps[i].getY(this); this.bottom = ramps[i]; }
 	}
 	
 	this.update = function() {
