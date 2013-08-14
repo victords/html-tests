@@ -38,31 +38,15 @@ Game.Main = {
 		// Initialization
 		//Game.Main.man = new Game.GameObject(100, 100, Game.Main.imgs[0], 16, 100, -42, 0, [0, 1, 2, 1, 0, 3, 4, 3]);
 		Game.Main.man = new Game.GameObject(100, 100, null, 100, 100);
-		Game.Main.ramps.push(new Game.Ramp(100, 500, 20, 15, true));
-		Game.Main.ramps.push(new Game.Ramp(120, 488, 20, 12, true));
-		Game.Main.ramps.push(new Game.Ramp(140, 478, 20, 10, true));
-		Game.Main.ramps.push(new Game.Ramp(160, 470, 20, 8, true));
-		Game.Main.ramps.push(new Game.Ramp(180, 464, 20, 6, true));
-		Game.Main.ramps.push(new Game.Ramp(200, 461, 20, 3, true));
-		Game.Main.ramps.push(new Game.Ramp(220, 460, 20, 1, true));
-		Game.Main.ramps.push(new Game.Ramp(240, 460, 20, 1, false));
-		Game.Main.ramps.push(new Game.Ramp(260, 461, 20, 3, false));
-		Game.Main.ramps.push(new Game.Ramp(280, 464, 20, 6, false));
-		Game.Main.ramps.push(new Game.Ramp(300, 470, 20, 8, false));
-		Game.Main.ramps.push(new Game.Ramp(320, 478, 20, 10, false));
-		Game.Main.ramps.push(new Game.Ramp(340, 488, 20, 12, false));
-		Game.Main.ramps.push(new Game.Ramp(360, 500, 20, 15, false));
-		Game.Main.objs.push(new Game.GameObject(0, 515, null, 480, 10));
-		Game.Main.objs.push(new Game.GameObject(120, 500, null, 240, 15));
-		Game.Main.objs.push(new Game.GameObject(140, 488, null, 200, 12));
-		Game.Main.objs.push(new Game.GameObject(160, 478, null, 160, 10));
-		Game.Main.objs.push(new Game.GameObject(180, 470, null, 120, 8));
-		Game.Main.objs.push(new Game.GameObject(200, 464, null, 80, 6));
-		Game.Main.objs.push(new Game.GameObject(220, 461, null, 40, 3));
-		Game.Main.objs.push(new Game.GameObject(600, 0, null, 100, 50));
-		Game.Main.objs.push(new Game.GameObject(700, 0, null, 50, 100));
-		Game.Main.objs.push(new Game.GameObject(600, 50, null, 50, 100));
-		Game.Main.objs.push(new Game.GameObject(650, 100, null, 100, 50));
+		Game.Main.ramps.push(new Game.Ramp(100, 400, 230, 100, true));
+		Game.Main.ramps.push(new Game.Ramp(330, 400, 230, 100, false));
+		Game.Main.objs.push(new Game.GameObject(0, 500, null, 660, 10));
+		
+		Game.Main.objs.push(new Game.GameObject(600, 150, null, 45, 33));
+		Game.Main.objs.push(new Game.GameObject(645, 120, null, 100, 10));
+		Game.Main.objs.push(new Game.GameObject(600, 190, null, 28, 136));
+		
+		Game.Main.objs.push(new Game.GameObject(275, 300, null, 110, 10, 0, 0, true));
 		Game.Main.ctx = document.getElementById("screen").getContext("2d");
 		Game.Main.ctx.fillStyle = "black";
 		Game.Main.ctx.lineWidth = 1;
@@ -81,16 +65,14 @@ Game.Main = {
 		}, 1000);
 	},
 	update: function() {
-		//if (keyPressed(KEYS.UP) || keyPressed(KEYS.RIGHT) || keyPressed(KEYS.DOWN) || keyPressed(KEYS.LEFT))
-			//console.log("Iniciou o movimento!");
 		var forces = { x: 0, y: 0 };
-		if (Game.Main.keyDown(Game.Main.KEYS.UP) && Game.Main.man.bottom) forces.y = -30;
-		if (Game.Main.keyDown(Game.Main.KEYS.RIGHT)) forces.x = 0.1;
-		//if (Game.Main.keyDown(Game.Main.KEYS.DOWN)) forces.y = 0.1;
-		if (Game.Main.keyDown(Game.Main.KEYS.LEFT)) forces.x = -0.1;
+		if (Game.Main.keyDown(Game.Main.KEYS.UP) && Game.Main.man.bottom)
+			forces.y = -20;
+		//if (Game.Main.keyDown(Game.Main.KEYS.UP)) forces.y = -0.4;
+		if (Game.Main.keyDown(Game.Main.KEYS.RIGHT)) forces.x = 0.4;
+		//if (Game.Main.keyDown(Game.Main.KEYS.DOWN)) forces.y = 0.4;
+		if (Game.Main.keyDown(Game.Main.KEYS.LEFT)) forces.x = -0.4;
 		
-		//if (keyReleased(KEYS.UP) || keyReleased(KEYS.RIGHT) || keyReleased(KEYS.DOWN) || keyReleased(KEYS.LEFT))
-			//console.log("Parou o movimento!");		
 		Game.Main.man.move(forces, Game.Main.objs, Game.Main.ramps);
 		
 		Game.Main.man.update();
