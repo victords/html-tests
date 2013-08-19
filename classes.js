@@ -1,4 +1,30 @@
-/* Creating namespace */
+/* Copyright (c) 2013, Victor David Santos
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Victor David Santos nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL VICTOR DAVID SANTOS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************************/
+
+// Creating namespace
 var Game = Game || {};
 
 Game.Rectangle = function(x, y, w, h) {
@@ -42,19 +68,85 @@ Game.Ramp = function(x, y, w, h, left) {
 	};
 };
 
-Game.GameObject = function(x, y, image, w, h, imgX, imgY, passable, animation) {
+Game.Elevator = function(x, y, w, h, speed) {
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+	this.speed = { x: 0, y: 0, m: speed };
+	this.point = 0;
+	this.moving = false;
+	this.passable = true;
+	
+	this.moveTo = function(x, y, obst) {
+		if (!this.moving) {
+			var xDist = x - this.x, yDist = y - this.y, freq = this.speed.m / Math.sqrt(xDist * xDist + yDist * yDist);
+			this.speed.x = xDist * freq;
+			this.speed.y = yDist * freq;
+			this.moving = true;
+		}
+		var xAim = this.x + this.speed.x, yAim = this.y + this.speed.y, passengers = [];
+		for (var i in obst)
+			if (this.x + this.w > obst[i].x && obst[i].x + obst[i].w > this.x) {
+				var foot = obst[i].y + obst[i].h;
+				if (foot > this.y - Game.Main.EPSILON && foot < this.y + Game.Main.EPSILON || this.speed.y < 0 && foot < this.y && foot > yAim)
+					passengers.push(obst[i]);
+			}
+		
+		if (this.speed.x > 0 && xAim >= x || this.speed.x < 0 && xAim <= x) {
+			for (var i in passengers) passengers[i].x += x - this.x;
+			this.x = x;
+			this.speed.x = 0;
+		}
+		else {
+			for (var i in passengers) passengers[i].x += this.speed.x;
+			this.x = xAim;
+		}
+		if (this.speed.y > 0 && yAim >= y || this.speed.y < 0 && yAim <= y) {
+			this.y = y;
+			this.speed.y = 0;
+		}
+		else this.y = yAim;
+		for (var i in passengers) passengers[i].y = this.y - passengers[i].h;
+		if (this.speed.x == 0 && this.speed.y == 0) this.moving = false;
+	};
+	this.cycle = function(points, obst) {
+		this.moveTo(points[this.point][0], points[this.point][1], obst);
+		if (!this.moving) {
+			if (this.point == points.length - 1) this.point = 0;
+			else this.point++;
+		}
+	};
+	this.isVisible = function() {return true;}
+	this.draw = function() {
+		Game.Main.ctx.fillRect(this.x - Game.Main.camX, this.y - Game.Main.camY, this.w, this.h);
+	}
+}
+
+Game.GameObject = function(x, y, image, w, h, imgX, imgY, passable, spriteWidth, spriteHeight, animation, animInterval) {
 	this.x = x;
 	this.y = y;
 	this.image = image;
-	this.w = w || image.w;
-	this.h = h || image.h;
+	this.w = w || image.width;
+	this.h = h || image.height;
 	this.imgX = imgX || 0;
 	this.imgY = imgY || 0;
 	this.passable = passable;
 	this.speed = { x: 0, y: 0 };
 	this.storedForces = { x: 0, y: 0 };
 	this.top = this.bottom = this.left = this.right = null;
-	this.animation = animation;
+	this.sprite = { x: 0, y: 0, w: spriteWidth || (image ? image.width : 0), h: spriteHeight || (image ? image.height : 0),
+		cols: (spriteWidth ? image.width / spriteWidth : 0) };
+	if (animation) this.animation = animation;
+	else if (spriteWidth) {
+		this.animation = [];
+		var total = this.sprite.cols * (image.height / spriteHeight);
+		for (var i = 0; i < total; i++)
+			this.animation.push(i);
+	}
+	else this.animation = null;
+	
+	this.animInterval = animInterval || 8;
 	this.animIndex = 0;
 	this.animCounter = 0;
 	
@@ -64,14 +156,15 @@ Game.GameObject = function(x, y, image, w, h, imgX, imgY, passable, animation) {
 		forces.x += this.storedForces.x; forces.y += this.storedForces.y;
 		this.storedForces.x = this.storedForces.y = 0;
 		for (var i in obst) {
-			if (!obst[i].passable && this.x + this.w == obst[i].x && this.y + this.h > obst[i].y &&
-				this.y < obst[i].y + obst[i].h && forces.x > 0) { forces.x = 0; this.right = obst[i]; }
-			if (!obst[i].passable && this.x == obst[i].x + obst[i].w && this.y + this.h > obst[i].y &&
-				this.y < obst[i].y + obst[i].h && forces.x < 0) { forces.x = 0; this.left = obst[i]; }
-			if (this.y + this.h == obst[i].y && this.x + this.w > obst[i].x &&
-				this.x < obst[i].x + obst[i].w && forces.y > 0) { forces.y = 0; this.bottom = obst[i]; }
-			if (!obst[i].passable && this.y == obst[i].y + obst[i].h && this.x + this.w > obst[i].x &&
-				this.x < obst[i].x + obst[i].w && forces.y < 0) { forces.y = 0; this.top = obst[i]; }
+			var x2 = this.x + this.w, y2 = this.y + this.h, x2o = obst[i].x + obst[i].w, y2o = obst[i].y + obst[i].h;
+			if (!obst[i].passable && x2 > obst[i].x - Game.Main.EPSILON && x2 < obst[i].x + Game.Main.EPSILON && y2 > obst[i].y &&
+				this.y < y2o && forces.x > 0) { forces.x = 0; this.right = obst[i]; }
+			if (!obst[i].passable && this.x > x2o - Game.Main.EPSILON && this.x < x2o + Game.Main.EPSILON && y2 > obst[i].y &&
+				this.y < y2o && forces.x < 0) { forces.x = 0; this.left = obst[i]; }
+			if (y2 > obst[i].y - Game.Main.EPSILON && y2 < obst[i].y + Game.Main.EPSILON && x2 > obst[i].x &&
+				this.x < x2o && forces.y > 0) { forces.y = 0; this.bottom = obst[i]; }
+			if (!obst[i].passable && this.y > y2o - Game.Main.EPSILON && this.y < y2o + Game.Main.EPSILON && x2 > obst[i].x &&
+				this.x < x2o && forces.y < 0) { forces.y = 0; this.top = obst[i]; }
 		}
 		if (forces.y > 0) {
 			for (var i in ramps)
@@ -189,26 +282,29 @@ Game.GameObject = function(x, y, image, w, h, imgX, imgY, passable, animation) {
 	};
 	
 	this.update = function() {
-		this.animCounter++;
-		if (this.animCounter == 7) {
-			if (this.animation) {
+		if (this.animation) {
+			this.animCounter++;
+			if (this.animCounter == this.animInterval) {
 				if (this.animIndex == this.animation.length - 1) this.animIndex = 0;
 				else this.animIndex++;
-				this.image = Game.Main.imgs[this.animation[this.animIndex]];
+				var index = this.animation[this.animIndex];
+				this.sprite.x = (index % this.sprite.cols) * this.sprite.w;
+				this.sprite.y = Math.floor(index / this.sprite.cols) * this.sprite.h;
+				this.animCounter = 0;
 			}
-			this.animCounter = 0;
 		}
 	};
 	
 	this.isVisible = function() {
 		var imgX = this.x + this.imgX - Game.Main.camX, imgY = this.y + this.imgY - Game.Main.camY;
-		return imgX < Game.Main.SCREEN_WIDTH && imgX + (this.image ? this.image.w : this.w) > 0 &&
-			imgY < Game.Main.SCREEN_HEIGHT && imgY + (this.image ? this.image.h : this.h) > 0;
+		return imgX < Game.Main.SCREEN_WIDTH && imgX + (this.image ? this.image.width : this.w) > 0 &&
+			imgY < Game.Main.SCREEN_HEIGHT && imgY + (this.image ? this.image.height : this.h) > 0;
 	};
 	
 	this.draw = function() {
 		Game.Main.ctx.globalAlpha = this.alpha;
-		if (this.image) Game.Main.ctx.drawImage(this.image, this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY);
+		if (this.image) Game.Main.ctx.drawImage(this.image, this.sprite.x, this.sprite.y, this.sprite.w, this.sprite.h,
+			this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY, this.sprite.w, this.sprite.h);
 		else Game.Main.ctx.fillRect(this.x + this.imgX - Game.Main.camX, this.y + this.imgY - Game.Main.camY, this.w, this.h);
 	};
 };
